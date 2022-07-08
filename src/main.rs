@@ -1,9 +1,9 @@
 use std::{
     env::args,
-    fs::File,
+    fs::{self, File},
     io::{Read, Write},
 };
-
+const PATH: &str = ".todos";
 struct Todo {
     id: u32,
     name: String,
@@ -19,22 +19,22 @@ impl Todo {
     }
 }
 fn get_file() -> (Vec<Todo>, u32) {
-    let path = ".todos";
     let mut todos: Vec<Todo> = Vec::new();
     let mut file: File;
     let mut buffer: String = String::new();
     let mut last_id = 0;
-    if !std::path::Path::new(path).exists() {
-        _ = File::create(path)
+    if !std::path::Path::new(PATH).exists() {
+        _ = File::create(PATH)
             .expect("Error while creating file")
             .write_all("\n".as_bytes())
             .expect("Error while writing to file");
     }
-    file = File::open(path).expect("Error while opening file .todos");
+    file = File::open(PATH).expect("Error while opening file .todos");
     file.read_to_string(&mut buffer)
         .expect("Error while reading todo");
     for todo in buffer.split("\n") {
-        if todo.trim().len() < 1 {
+        if todo.trim().len() > 1 {
+            println!("{}", todo);
             let splited = todo.split("-").collect::<Vec<&str>>();
             let id = splited[0]
                 .trim()
@@ -51,11 +51,22 @@ fn get_file() -> (Vec<Todo>, u32) {
     };
     (todos, last_id)
 }
-fn save_to_file(todos: & Vec<Todo>){
-
+fn save_to_file(todos: &Vec<Todo>) {
+    let mut buffer = String::new();
+    let mut first = true;
+    for todo in todos {
+        if first {
+            buffer = format!("{} - {}", todo.id, todo.name);
+            first = false;
+            continue;
+        }
+        buffer = format!("{} \n{} - {}", buffer, todo.id, todo.name);
+    }
+    fs::write(PATH, buffer).expect("Error while saving the todos");
 }
+
 fn main() {
-    let (mut todos, mut last_id)= get_file();
+    let (mut todos, mut last_id) = get_file();
     for (pos, arg) in args().enumerate() {
         if pos == 0 {
             continue;
@@ -66,5 +77,6 @@ fn main() {
             break;
         }
     }
+
     save_to_file(&todos);
 }
