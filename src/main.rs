@@ -16,6 +16,14 @@ impl Todo {
         }
     }
 }
+impl std::fmt::Debug for Todo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Todo")
+            .field("Id", &self.id)
+            .field("Name", &self.name)
+            .finish()
+    }
+}
 fn get_file() -> (Vec<Todo>, u32) {
     let mut todos: Vec<Todo> = Vec::new();
     let mut file: File;
@@ -32,13 +40,12 @@ fn get_file() -> (Vec<Todo>, u32) {
         .expect("Error while reading todo");
     for todo in buffer.split("\n") {
         if todo.trim().len() > 1 {
-            println!("{}", todo);
             let splited = todo.split("-").collect::<Vec<&str>>();
             let id = splited[0]
                 .trim()
                 .parse::<u32>()
                 .expect("Error while parsing");
-            let name = splited[1];
+            let name = splited[1].trim();
             todos.push(Todo::new(name, id))
         }
     }
@@ -98,7 +105,7 @@ fn main() {
             break;
         }
         if oper == "-n" {
-            last_id = add_todo(&mut todos, last_id, &arg);
+            last_id = add_todo(&mut todos, last_id, &arg.trim());
         } else if oper == "-d" {
             let id = arg.trim().parse().expect("Error while parsing");
             remove_todo(&mut todos, id)
